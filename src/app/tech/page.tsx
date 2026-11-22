@@ -1,9 +1,10 @@
 import { db } from "@/db";
-import { jobs, catalogItems, tenants } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { jobs, catalogItems, tenants, changeOrders } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { CANONICAL_DEMO_TENANT, resolveTenantProfile } from "@/lib/tenant-theme";
 import { formatCents } from "@/lib/money";
-import { Wrench, MapPin, Briefcase, Plus, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Wrench, MapPin, Briefcase, Plus, Clock, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 
 export default async function TechPage() {
   let tenant = CANONICAL_DEMO_TENANT;
@@ -14,6 +15,15 @@ export default async function TechPage() {
     serviceAddress: string;
     status: string;
   }> = [];
+
+  let jobCOs: Record<
+    string,
+    Array<{
+      id: string;
+      status: "pending_office" | "pending_homeowner" | "approved" | "declined" | "reconciled";
+      subtotalCents: number;
+    }>
+  > = {};
 
   let catalog: Array<{
     id: string;
@@ -42,6 +52,25 @@ export default async function TechPage() {
       })
       .from(jobs)
       .where(eq(jobs.tenantId, tenant.id));
+
+    if (activeJobs.length > 0) {
+      const jobIds = activeJobs.map((j) => j.id);
+      const coRows = await db
+        .select({
+          id: changeOrders.id,
+          jobId: changeOrders.jobId,
+          status: changeOrders.status,
+          subtotalCents: changeOrders.subtotalCents,
+        })
+        .from(changeOrders)
+        .where(inArray(changeOrders.jobId, jobIds));
+
+      jobCOs = coRows.reduce((acc, co) => {
+        if (!acc[co.jobId]) acc[co.jobId] = [];
+        acc[co.jobId].push(co);
+        return acc;
+      }, {} as typeof jobCOs);
+    }
 
     catalog = await db
       .select({
@@ -77,55 +106,94 @@ export default async function TechPage() {
             <div className="text-lg font-bold text-sky-900">
               {formatCents(tenant.approvalThresholdCents)}
             </div>
+            <div className="text-[10px] text-sky-600">&le; Direct | &gt; Office Review</div>
           </div>
-        </div>
-      </div>
-
-      {/* Notice card for change 002 */}
-      <div className="bg-blue-50/70 border border-blue-200/80 rounded-lg p-4 text-xs text-blue-900 flex items-start gap-2.5">
-        <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-        <div>
-          <strong>Phase 1 Walking Skeleton:</strong> Active jobs and flat-rate catalog loaded from PostgreSQL.
-          Interactive &lt;30s add-on capture flow will be wired in <code>002-field-capture-and-threshold</code>.
         </div>
       </div>
 
       {/* Jobs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {activeJobs.map((job) => (
-          <div
-            key={job.id}
-            data-testid={`job-card-${job.jobNumber}`}
-            className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-300 transition"
-          >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                <Briefcase className="w-3 h-3 text-slate-500" />
-                {job.jobNumber}
-              </span>
-              <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                In Progress
-              </span>
-            </div>
+        {activeJobs.map((job) => {
+          const cos = jobCOs[job.id] || [];
+          return (
+            <div
+              key={job.id}
+              data-testid={`job-card-${job.jobNumber}`}
+              className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-slate-300 transition flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                    <Briefcase className="w-3 h-3 text-slate-500" />
+                    {job.jobNumber}
+                  </span>
+                  <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                    In Progress
+                  </span>
+                </div>
 
-            <h3 className="text-base font-bold text-slate-900">{job.customerName}</h3>
-            <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
-              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              {job.serviceAddress}
-            </p>
+                <h3 className="text-base font-bold text-slate-900">{job.customerName}</h3>
+                <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  {job.serviceAddress}
+                </p>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-400">Mid-job add-on</span>
-              <button
-                type="button"
-                className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1 transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Capture Add-On
-              </button>
+                {/* Existing Change Orders on this Job */}
+                {cos.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+                    <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                      Existing Add-Ons ({cos.length})
+                    </div>
+                    {cos.map((co) => (
+                      <Link
+                        key={co.id}
+                        href={`/tech/change-orders/${co.id}`}
+                        className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-md bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition group"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          {co.status === "pending_office" && (
+                            <span className="text-amber-700 font-medium flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Office Review
+                            </span>
+                          )}
+                          {co.status === "pending_homeowner" && (
+                            <span className="text-sky-700 font-medium flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              Awaiting Homeowner
+                            </span>
+                          )}
+                          {co.status === "approved" && (
+                            <span className="text-emerald-700 font-medium flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Approved
+                            </span>
+                          )}
+                          <span className="font-bold text-slate-800">
+                            {formatCents(co.subtotalCents)}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:text-slate-600 transition" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-slate-400">&lt;30s Add-On</span>
+                <Link
+                  href={`/tech/jobs/${job.id}/new-change-order`}
+                  data-testid={`capture-addon-${job.jobNumber}`}
+                  className="px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  + Add Change Order
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Flat-rate catalog preview */}
