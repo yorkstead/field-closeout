@@ -33,3 +33,17 @@ Must be answered in writing by a real design partner before graduating to `prote
 3. **Field Pricing Guardrails:** Will owners allow techs to enter custom free-text prices, or restrict techs strictly to locked flat-rate catalog items?
 4. **Primary System of Record:** Which tool (Jobber, Housecall Pro, ServiceTitan, QuickBooks) is the primary billing system, and is printable PDF + CSV export sufficient for a paid pilot?
 5. **Photo Retention & Privacy:** What retention window and homeowner consent language are required for job-site photos containing residential interiors?
+
+---
+
+## 4. Commercial & Pricing Policy (Confirmed Founder Model)
+Yorkstead does **not** sell Field Closeout as a traditional monthly SaaS subscription. Core product IP remains 100% Yorkstead-owned; customers purchase a **perpetual single-shop license** (up to 15 trucks) with white-glove setup:
+
+- **First-in-Trade Founding Partner (1 slot per trade — HVAC, Plumbing, Electrical, Fencing):** **\$1,250 – \$1,500 one-time** in exchange for helping dial in that trade's starter flat-rate catalog, terminology, disclosures, and a real-world proof point.
+- **Standard Trade License (Shop #2+ in that trade):** **\$2,500 – \$3,500 one-time** (includes white-glove setup of company logo, flat-rate add-on menu, office approval threshold, and state disclosures).
+- **Phase 3 FSM/QuickBooks Sync Add-On (future):** **+\$1,500 – \$2,500 one-time** when built.
+- **Managed Hosting & Support (Unified Yorkstead Standard):**
+  - **Year 1:** **Free** (included with license).
+  - **Year 2+:** **\$400/year** (or **\$50/month** if preferred).
+  - *Phase 2 SMS guardrail:* Include a fair-use SMS allowance (e.g., up to 500 SMS approval links/month) in hosting terms to protect margin on high-volume shops.
+
