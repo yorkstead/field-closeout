@@ -1,0 +1,30 @@
+project:
+  name: field-closeout
+  owner: yorkstead
+  default_branch: next
+  protected_branch: main
+  stack:
+    framework: nextjs-app-router
+    language: typescript-strict
+    runtime: bun
+    styling: tailwind-css
+    database: postgresql-neon
+    orm: drizzle-orm
+    validation: zod
+    e2e: playwright
+    hosting: vercel
+
+conventions:
+  change_prefix_digits: 3
+  branch_pattern: "feat/<change-id>"
+  verify_command: "bun run verify"
+  money_representation: "integer_cents"
+  runtime_modes:
+    - local
+    - hosted_demo
+    - protected_pilot
+
+domains:
+  - runtime-boundaries
+  - change-orders
+  - closeout
