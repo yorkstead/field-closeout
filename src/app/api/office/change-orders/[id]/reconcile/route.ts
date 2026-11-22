@@ -67,7 +67,7 @@ export async function POST(
 
     // 2. Transactional reconciliation
     await db.transaction(async (tx) => {
-      await tx
+      const updated = await tx
         .update(changeOrders)
         .set({
           status: "reconciled",
@@ -76,7 +76,12 @@ export async function POST(
           reconciledByUserId: session.userId,
           updatedAt: reconciledAt,
         })
-        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "approved")));
+        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "approved")))
+        .returning({ id: changeOrders.id });
+
+      if (updated.length === 0) {
+        throw new Error("CONFLICT_STATE_CHANGED");
+      }
 
       await tx.insert(approvalEvents).values({
         tenantId: session.tenantId,
@@ -94,7 +99,13 @@ export async function POST(
       reconciledInvoiceRef,
       reconciledAt: reconciledAt.toISOString(),
     });
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "CONFLICT_STATE_CHANGED") {
+      return NextResponse.json(
+        { error: "Change order status has already changed." },
+        { status: 409 }
+      );
+    }
     console.error("Reconcile error:", err);
     return NextResponse.json({ error: "Failed to reconcile change order." }, { status: 500 });
   }

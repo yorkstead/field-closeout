@@ -102,13 +102,18 @@ export async function POST(
 
     // 5. Transactional update & audit log
     await db.transaction(async (tx) => {
-      await tx
+      const updated = await tx
         .update(changeOrders)
         .set({
           status: newStatus,
           updatedAt: new Date(),
         })
-        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "pending_homeowner")));
+        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "pending_homeowner")))
+        .returning({ id: changeOrders.id });
+
+      if (updated.length === 0) {
+        throw new Error("CONFLICT_STATE_CHANGED");
+      }
 
       await tx.insert(approvalEvents).values({
         tenantId: co.tenantId,
@@ -128,7 +133,13 @@ export async function POST(
       status: newStatus,
       snapshotHash: decision === "approved" ? snapshotHash : null,
     });
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "CONFLICT_STATE_CHANGED") {
+      return NextResponse.json(
+        { error: "Change order status has already changed." },
+        { status: 409 }
+      );
+    }
     console.error("Public approve error:", err);
     return NextResponse.json({ error: "Failed to process decision." }, { status: 500 });
   }

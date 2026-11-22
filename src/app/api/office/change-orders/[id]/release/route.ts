@@ -75,45 +75,59 @@ export async function POST(
 
     let finalSubtotalCents = co.subtotalCents;
     const isAdjusted = Boolean(adjustedItems && adjustedItems.length > 0);
+    const lineItemUpdates: { id: string; unitPriceCents: number; lineTotalCents: number }[] = [];
 
-    await db.transaction(async (tx) => {
-      if (isAdjusted && adjustedItems) {
-        const adjustmentMap = new Map(adjustedItems.map((a) => [a.lineItemId, a.unitPriceCents]));
-        const updatedTotals: number[] = [];
+    if (isAdjusted && adjustedItems) {
+      const adjustmentMap = new Map(adjustedItems.map((a) => [a.lineItemId, a.unitPriceCents]));
+      const updatedTotals: number[] = [];
 
-        for (const item of lineItemRows) {
-          let unitPrice = item.unitPriceCents;
-          if (adjustmentMap.has(item.id)) {
-            unitPrice = adjustmentMap.get(item.id)!;
-            assertNonNegativeCents(unitPrice, `adjusted unit price for ${item.title}`);
+      for (const item of lineItemRows) {
+        let unitPrice = item.unitPriceCents;
+        if (adjustmentMap.has(item.id)) {
+          unitPrice = adjustmentMap.get(item.id)!;
+          assertNonNegativeCents(unitPrice, `adjusted unit price for ${item.title}`);
 
-            const lineTotal = computeLineTotalCents(item.quantity, unitPrice);
-            await tx
-              .update(changeOrderLineItems)
-              .set({
-                unitPriceCents: unitPrice,
-                lineTotalCents: lineTotal,
-              })
-              .where(eq(changeOrderLineItems.id, item.id));
-
-            updatedTotals.push(lineTotal);
-          } else {
-            updatedTotals.push(item.lineTotalCents);
-          }
+          const lineTotal = computeLineTotalCents(item.quantity, unitPrice);
+          lineItemUpdates.push({
+            id: item.id,
+            unitPriceCents: unitPrice,
+            lineTotalCents: lineTotal,
+          });
+          updatedTotals.push(lineTotal);
+        } else {
+          updatedTotals.push(item.lineTotalCents);
         }
-
-        finalSubtotalCents = computeSubtotalCents(updatedTotals);
       }
 
-      // Update change order status to pending_homeowner
-      await tx
+      finalSubtotalCents = computeSubtotalCents(updatedTotals);
+    }
+
+    await db.transaction(async (tx) => {
+      // Check and update change order status to pending_homeowner first
+      const updated = await tx
         .update(changeOrders)
         .set({
           status: "pending_homeowner",
           subtotalCents: finalSubtotalCents,
           updatedAt: new Date(),
         })
-        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "pending_office")));
+        .where(and(eq(changeOrders.id, co.id), eq(changeOrders.status, "pending_office")))
+        .returning({ id: changeOrders.id });
+
+      if (updated.length === 0) {
+        throw new Error("CONFLICT_STATE_CHANGED");
+      }
+
+      // Mutate line items only after change order status check succeeds
+      for (const update of lineItemUpdates) {
+        await tx
+          .update(changeOrderLineItems)
+          .set({
+            unitPriceCents: update.unitPriceCents,
+            lineTotalCents: update.lineTotalCents,
+          })
+          .where(eq(changeOrderLineItems.id, update.id));
+      }
 
       // Append audit event
       await tx.insert(approvalEvents).values({
@@ -132,7 +146,13 @@ export async function POST(
       subtotalCents: finalSubtotalCents,
       eventType: isAdjusted ? "office_adjusted" : "office_approved",
     });
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "CONFLICT_STATE_CHANGED") {
+      return NextResponse.json(
+        { error: "Change order status has already changed." },
+        { status: 409 }
+      );
+    }
     console.error("Office release error:", err);
     return NextResponse.json({ error: "Failed to release change order." }, { status: 500 });
   }

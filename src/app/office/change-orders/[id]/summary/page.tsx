@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { db } from "@/db";
 import {
   changeOrders,
@@ -33,7 +33,10 @@ export default async function CloseoutSummaryPage({
 }) {
   const { id } = await params;
   const session = await getServerSession();
-  const tenantId = session?.tenantId || CANONICAL_DEMO_TENANT.id;
+  if (!session || (session.role !== "office" && session.role !== "owner")) {
+    redirect("/tech");
+  }
+  const tenantId = session.tenantId || CANONICAL_DEMO_TENANT.id;
 
   // 1. Fetch Change Order with Job and Creator
   const coRows = await db
