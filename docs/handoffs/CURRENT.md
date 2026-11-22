@@ -2,7 +2,7 @@
 
 - **Active Phase:** Phase 1 — Half-Day Demo Wedge (Fictional Demo)
 - **Default Target Branch:** `next`
-- **Last Verified Commit SHA:** `d355559` (`feat/003-homeowner-approval-and-closeout`)
+- **Last Verified Commit SHA:** `3261c92` (`feat/003-homeowner-approval-and-closeout`)
 - **Runtime Mode Target:** `local` & `hosted_demo` (100% synthetic data; *Northstar Mechanical & Plumbing*)
 
 ## Change Queue
