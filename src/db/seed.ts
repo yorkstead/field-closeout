@@ -8,7 +8,7 @@ import {
   changeOrderLineItems,
   approvalEvents,
 } from "./schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createHash } from "crypto";
 
 export const DEMO_TENANT_ID = "a0000000-0000-4000-8000-000000000001";
@@ -18,7 +18,16 @@ export const DEMO_OFFICE_USER_ID = "b0000000-0000-4000-8000-000000000002";
 export async function seedDemoData(): Promise<void> {
   console.log("Seeding synthetic demo data for Northstar Mechanical & Plumbing...");
 
-  // 1. Clean existing records for the demo tenant (cascade cleans related tables)
+  // Temporarily set session_replication_role to replica to allow demo reset cleaning
+  await db.execute(sql`SET session_replication_role = 'replica';`);
+
+  // 1. Clean existing records for the demo tenant in reverse dependency order
+  await db.delete(approvalEvents).where(eq(approvalEvents.tenantId, DEMO_TENANT_ID));
+  await db.delete(changeOrderLineItems).where(eq(changeOrderLineItems.tenantId, DEMO_TENANT_ID));
+  await db.delete(changeOrders).where(eq(changeOrders.tenantId, DEMO_TENANT_ID));
+  await db.delete(jobs).where(eq(jobs.tenantId, DEMO_TENANT_ID));
+  await db.delete(catalogItems).where(eq(catalogItems.tenantId, DEMO_TENANT_ID));
+  await db.delete(users).where(eq(users.tenantId, DEMO_TENANT_ID));
   await db.delete(tenants).where(eq(tenants.id, DEMO_TENANT_ID));
 
   // 2. Insert Demo Tenant
@@ -266,6 +275,9 @@ export async function seedDemoData(): Promise<void> {
       snapshotHash: co3Hash,
     },
   ]);
+
+  // Restore session_replication_role to origin
+  await db.execute(sql`SET session_replication_role = 'origin';`);
 
   console.log("[✓] Synthetic demo data successfully seeded for Northstar Mechanical & Plumbing.");
 }
