@@ -40,5 +40,9 @@ jobs:
           else
             bun install
           fi
+      - name: Migrate and seed test database
+        run: bun run db:migrate && bun run db:seed
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
       - name: Run verify gate
         run: bun run verify
