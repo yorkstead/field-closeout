@@ -18,9 +18,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? "bun run start" : "bun run dev",
+    command: process.env.PLAYWRIGHT_SERVER_CMD || "bun run start",
     url: "http://localhost:3000/api/health",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 60000,
   },
 });

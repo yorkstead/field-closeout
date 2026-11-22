@@ -65,3 +65,52 @@ describe("API Demo Endpoints — Runtime Boundary Enforcement", () => {
     expect(setCookie).toContain("fc_demo_role=office");
   });
 });
+
+describe("API State Machine & Conflict Invariants (409)", () => {
+  it("POST /api/public/approve/[token] rejects already-approved change order with 409", async () => {
+    const { POST: handlePublicApprove } = await import(
+      "../../src/app/api/public/approve/[token]/route"
+    );
+
+    const request = new Request("http://localhost:3000/api/public/approve/token_demo_approved_003", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        decision: "approved",
+        signerName: "Taylor Morgan",
+      }),
+    });
+
+    const response = await handlePublicApprove(request, {
+      params: Promise.resolve({ token: "token_demo_approved_003" }),
+    });
+
+    expect(response.status).toBe(409);
+    const data = await response.json();
+    expect(data.error).toContain("already been decided");
+  });
+
+  it("POST /api/public/approve/[token] rejects pending_office change order with 409", async () => {
+    const { POST: handlePublicApprove } = await import(
+      "../../src/app/api/public/approve/[token]/route"
+    );
+
+    const request = new Request("http://localhost:3000/api/public/approve/token_demo_pending_office_002", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        decision: "approved",
+        signerName: "Jordan Bennett",
+      }),
+    });
+
+    const response = await handlePublicApprove(request, {
+      params: Promise.resolve({ token: "token_demo_pending_office_002" }),
+    });
+
+    expect(response.status).toBe(409);
+    const data = await response.json();
+    expect(data.error).toContain("awaiting office review");
+  });
+});
+
