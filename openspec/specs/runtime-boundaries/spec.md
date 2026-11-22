@@ -21,7 +21,7 @@ The system MUST validate `APP_RUNTIME_MODE` (`local` | `hosted_demo` | `protecte
 - **THEN** the session cookie updates to the seeded `office` user and subsequent server requests resolve `role === 'office'` scoped to the seeded tenant.
 
 ### Requirement: Idempotent Synthetic Demo Seed & Reset
-The system MUST seed 100% fictional trade contractor data (*Northstar Mechanical & Plumbing*) and allow resetting to a clean baseline in `local` and `hosted_demo` modes without leaking session-level Postgres settings onto the shared pool (`SET LOCAL session_replication_role = 'replica'` strictly inside a transaction).
+The system MUST seed 100% fictional trade contractor data (*Northstar Mechanical & Plumbing*) and allow resetting to a clean baseline in `local` and `hosted_demo` modes on both local and managed PostgreSQL (e.g., Neon) without requiring superuser privileges or leaking session settings onto the shared pool (`set_config('app.demo_reset', 'on', true)` strictly inside a transaction).
 
 #### Scenario: Reset Demo Data restores baseline
 - **WHEN** a user triggers `POST /api/demo/reset` in `local` or `hosted_demo`

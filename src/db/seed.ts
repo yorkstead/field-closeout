@@ -19,8 +19,8 @@ export async function seedDemoData(): Promise<void> {
   console.log("Seeding synthetic demo data for Northstar Mechanical & Plumbing...");
 
   await db.transaction(async (tx) => {
-    // Scoped replica role for foreign key and trigger bypass during demo cleanup
-    await tx.execute(sql`SET LOCAL session_replication_role = 'replica';`);
+    // Scoped custom GUC (non-superuser safe on Neon & local Postgres) for demo cleanup
+    await tx.execute(sql`SELECT set_config('app.demo_reset', 'on', true);`);
 
     // 1. Clean existing records for the demo tenant in reverse dependency order
     await tx.delete(approvalEvents).where(eq(approvalEvents.tenantId, DEMO_TENANT_ID));
