@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <!-- Disconnect Box -->
+  <rect x="90" y="40" width="220" height="190" rx="8" fill="#334155" stroke="#475569" stroke-width="3"/>
+  <rect x="110" y="60" width="180" height="150" rx="4" fill="#1e293b"/>
+  <!-- Switch Pullout -->
+  <rect x="160" y="90" width="80" height="70" rx="6" fill="#64748b"/>
+  <rect x="175" y="110" width="50" height="15" rx="3" fill="#dc2626"/>
+  <!-- Surge Protector Add-On Device -->
+  <rect x="235" y="180" width="60" height="40" rx="4" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+  <circle cx="250" cy="200" r="4" fill="#22c55e"/>
+  <circle cx="280" cy="200" r="4" fill="#22c55e"/>
+  <!-- Conduit from bottom -->
+  <rect x="185" y="230" width="30" height="50" fill="#475569"/>
+  <!-- Label -->
+  <text x="200" y="255" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" text-anchor="middle">
+    AC DISCONNECT + SURGE (SAMPLE)
+  </text>
+  <text x="200" y="278" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11" text-anchor="middle">
+    Outdoor 60A disconnect • SPD addition
+  </text>
+</svg>
