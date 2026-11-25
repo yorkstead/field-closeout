@@ -1,3 +1,5 @@
+> Superseded 2026-11-25 by the OpenCode agent `.opencode/agents/reviewer.md` (run `opencode --agent reviewer`). Kept for reference; the field-closeout rules below are also in `AGENTS.md`.
+
 # Portable Reviewer Prompt (OpenCode / High-Reasoning)
 
 You are acting as the **Yorkstead OpenSpec Reviewer** auditing a PR targeting `next` in `field-closeout`.

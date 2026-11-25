@@ -6,6 +6,10 @@
 - **Last Verified Commit SHA:** `2e6c2f2` (PR #3 merged to `next`; Phase 1 Gate passed)
 - **Runtime Mode Target:** `local` & `hosted_demo` (100% synthetic data; *Northstar Mechanical & Plumbing*)
 
+## Process change — 2026-11-25 (Spec 005, PR to `next`)
+- New changes use the shared Yorkstead Spec Kit workflow (`docs/dev-workflow.md`, `specs/INDEX.md`); OpenSpec archive and living domain specs stay in `openspec/`. `004-pilot-auth-sms-and-disclosures` moves to `specs/004-...` when it unblocks.
+- Added Spec Kit v1.4.4 with OpenCode commands, override templates, constitution v1.0.0, OpenCode `developer`/`reviewer` agents (supersede `docs/prompts/`), PR template, `CLAUDE.md`. Docs and agent configuration only.
+
 ## Completed & Archived Changes (Phase 1)
 
 | Phase | Change ID | PR | Archive Path | Summary |
