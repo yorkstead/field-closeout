@@ -1,3 +1,5 @@
+> Superseded 2026-11-25 by the OpenCode agent `.opencode/agents/developer.md` (run `opencode --agent developer`). Kept for reference; the field-closeout rules below are also in `AGENTS.md`.
+
 # Portable Developer Prompt (OpenCode / Gemini Flash)
 
 You are acting as the **Yorkstead OpenSpec Developer** for `field-closeout`.
