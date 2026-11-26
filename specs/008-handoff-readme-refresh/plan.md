@@ -1,0 +1,43 @@
+# Implementation plan: Handoff state and README refresh
+
+**Spec:** [spec.md](./spec.md)
+
+## Approach
+After Brandon approves D1–D5 and the spec owner moves this spec to Approved/In progress in a separate planning/status edit, derive the README directly from the then-current `.env.example`, `docker-compose.yml`, `package.json`, `playwright.config.ts`, optional `playwright.hosted-demo.config.ts`, and runtime documentation rather than introducing setup abstractions. Keep the required command order and separate production-deployment facts from full-test evidence in CURRENT. Explicitly warn that `main@5925540` is still the shared canonical synthetic demo with global reset/no per-visitor isolation until 006 ships. Rehearse the README verbatim in a fresh local clone before writing any success claim, then run the final repository gate and close only the listed documentation/state files.
+
+## Files and boundaries
+Implementers may touch only the files listed here; anything else needs a plan update first.
+
+| Area / file | Change | Risk |
+|---|---|---|
+| `README.md` | Replace the one-line placeholder with product/Phase 1 overview, prerequisites, exact install→env→Postgres→migrate→seed→Chromium→verify→dev commands, destructive-local-seed and current port/config warnings (including 3001 if 006 landed), final verify chain, runtime modes, and relative repository links | High if commands diverge from actual scripts or a reader starts dev before Playwright's fixed-port production server |
+| `docs/handoffs/CURRENT.md` | Add separate live Production Deployment (`field-closeout.vercel.app`, `main@5925540`, `hosted_demo`), apply approved D1 Last Verified treatment, remove stale deploy-next action, preserve 001–005 history and Phase 2/004 blocker, and mirror 006–008 spec statuses at edit time | High if deployment is presented as test evidence or 008 is left awaiting an approval already granted |
+| `specs/008-handoff-readme-refresh/tasks.md` | Tick tasks and maintain current/next/blocker state | Low |
+| `specs/008-handoff-readme-refresh/verification.md` | New: clean-clone environment and exact command evidence, final `bun run verify` output, dev health smoke, link/history/status checks, D1 evidence choice, and explicit production/non-verified limitations | High if outputs from different SHAs or environments are conflated |
+| `specs/INDEX.md` | Add/update only the 008 title/link/current spec status while preserving 004 reservation, 006/007 rows, and historical numbering | Low |
+
+Spec-owner-only status exception: Claude/Brandon, not the implementer, may change `specs/008-handoff-readme-refresh/spec.md` between Draft → Approved/In progress → Review/Done in separate planning/review edits. The implementer mirrors the then-current status in CURRENT/INDEX and never marks Done while the post-merge AC11 check or other acceptance evidence is pending.
+
+No other file is editable by the implementer. In particular, do not touch `package.json`, any lockfile, `.env.example`, `.env`, `docker-compose.yml`, `playwright.config.ts`, `next.config.mjs`, `src/**`, `tests/**`, migrations/seed files, CI/deployment configuration, 006/007 spec files, `openspec/**`, or other docs. The malformed `bun run dbun run dev` text is fixed by documenting real existing scripts, never by adding a package alias.
+
+## Data and migrations
+- Schema change: none. The rehearsal runs existing migrations and destructive synthetic seed only against the local Compose Postgres selected by a fresh copy of `.env.example`. No hosted/shared database, production migration, live reset, or non-demo record is touched. Documentation rollback has no database component; any local disposable demo database may remain or be stopped by the tester without deleting hosted data.
+
+## Phases and gates
+1. **Specification/evidence/status gate:** Brandon selects D1–D5 and approves; the spec owner separately moves spec.md to Approved/In progress before T001. If D1 Option B/C requires new evidence, identify its exact SHA/command/output before editing CURRENT. No implementation begins with these decisions Open.
+2. **Documentation refresh:** T001 writes README from repository evidence; T002 refreshes CURRENT while re-reading each 006/007/008 spec's then-current status. Preserve all historical/archive text required by AC7 and do not take over other specs' status changes. Every task runs current-revision `bun run verify` and updates verification/tasks/CURRENT before completion.
+3. **Clean-clone acceptance:** T003 follows README alone in a fresh source-only local clone, with no copied `.env`/`node_modules`, no existing test/dev server, and local ports 3000/5432 plus 3001 if required by the landed 006 test chain available. Run every documented command in order, including Chromium installation and full verify **before** dev; then smoke `/api/health` under dev, stop the server, and record actual evidence. Pre-merge evidence covers AC2–AC4 and the feature-branch portion of AC5 only.
+4. **Final close-out:** T004 makes INDEX/CURRENT/task-state edits before final `bun run verify`, appends only verification output afterward, and checks the exact implementer-file boundary. AC11's post-merge link check remains pending and is owned by Brandon/release agent in T005; spec 008 is not Done until it is recorded. All production actions remain outside implementation.
+
+## Verification strategy
+- Automated: in the clean clone, run exactly `bun install --frozen-lockfile`; `cp .env.example .env`; `docker compose up -d --wait postgres`; `bun run db:migrate`; `bun run db:seed`; `bunx playwright install chromium`; then `bun run verify` with no test/dev server running. Confirm output shows the then-current `bun run db:migrate:check`, `bun run lint`, `bun run typecheck`, `bun run test:unit`, `bun run build`, and `bun run test:e2e` succeeding in order; if 006 has landed, also confirm both configured Playwright projects and port 3001. Only afterward run `bun run dev` and smoke `http://localhost:3000/api/health`. Run `bun run verify` once more on the final close-out revision and save real output.
+- Manual: compare every documented script to `package.json` and fixed Playwright URL/server behavior to `playwright.config.ts` plus optional `playwright.hosted-demo.config.ts`; check `.env.example` remains local and the seed warning is prominent; verify README relative targets exist on the feature branch. Compare CURRENT's Production Deployment/shared-demo warning and Last Verified fields independently, diff its preserved history against the prior document, re-read 006/007/008 statuses, and confirm no In progress work is labeled Awaiting approval. Use `git diff --check` and the authorized-file diff review. After merge, the owner/release agent performs the separate AC11 link check on `next` and appends evidence; do not claim it pre-merge.
+- Not verifiable here (and why): a Vercel page being live does not demonstrate the full verify chain on `main@5925540`; unless that exact SHA is separately checked out and tested with recorded output, `verification.md` must state this limitation. A post-merge `next` link click cannot be performed before Brandon merges, so pre-merge evidence is limited to relative-target existence and the post-merge check remains an owner/close-out action. No claim about a bare-OS install is made under the recommended D2 baseline.
+
+## Risks and rollback
+- Playwright cannot reuse an existing server and always probes port 3000. Keep `PORT=3000`, stop other app servers, run verify before dev, and document the fixed 3000/5432 prerequisites rather than altering configuration.
+- Seed and e2e reset are destructive to the canonical demo tenant. Restrict rehearsal to a fresh local `.env` and Compose database; never substitute a hosted `DATABASE_URL` for convenience.
+- Updating Last Verified merely to match production would fabricate full-gate evidence. Apply only approved D1 wording and keep production, feature-branch clean-clone, and historical Phase 1 evidence in separate labeled fields/sections.
+- Concurrent 006–008 edits can make queue statuses stale. Re-read each spec immediately before CURRENT/INDEX close-out; do not hardcode 008 as Draft during its own In progress implementation or overwrite another spec's files.
+- Current `main` lacks Spec Kit docs. Use relative links and the approved feature/`next` baseline; do not “fix” this by removing required links or editing/deploying `main`.
+- Rollback is a documentation-only revert of the five authorized implementation/close-out files. No app, dependency, schema, hosted data, or live-deployment rollback is part of this change.

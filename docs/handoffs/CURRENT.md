@@ -6,6 +6,9 @@
 - **Last Verified Commit SHA:** `2e6c2f2` (PR #3 merged to `next`; Phase 1 Gate passed)
 - **Runtime Mode Target:** `local` & `hosted_demo` (100% synthetic data; *Northstar Mechanical & Plumbing*)
 
+## Spec drafting — 2026-11-26
+- Drafted specs [006-isolated-demo-sessions](../../specs/006-isolated-demo-sessions/spec.md), [007-demo-script-explainer](../../specs/007-demo-script-explainer/spec.md), and [008-handoff-readme-refresh](../../specs/008-handoff-readme-refresh/spec.md). All three are **Draft** and await Brandon's approval before any implementation begins; no application, database, deployment, or settings changes are included in this drafting batch.
+
 ## Process change — 2026-11-25 (Spec 005, PR to `next`)
 - New changes use the shared Yorkstead Spec Kit workflow (`docs/dev-workflow.md`, `specs/INDEX.md`); OpenSpec archive and living domain specs stay in `openspec/`. `004-pilot-auth-sms-and-disclosures` moves to `specs/004-...` when it unblocks.
 - Added Spec Kit v1.4.4 with OpenCode commands, override templates, constitution v1.0.0, OpenCode `developer`/`reviewer` agents (supersede `docs/prompts/`), PR template, `CLAUDE.md`. Docs and agent configuration only.
